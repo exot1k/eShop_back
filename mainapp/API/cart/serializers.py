@@ -11,7 +11,7 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Customer
-        fields = ['user', 'email', 'address', 'orders']
+        fields = ['user', 'email', 'address', 'orders', 'first_name', 'last_name']
 
     @staticmethod
     def get_user(obj):
@@ -22,7 +22,8 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
     products = CartProductSerializer(many=True)
-    owner = CustomerSerializer()
+
+    # owner = CustomerSerializer()
 
     class Meta:
         model = Cart

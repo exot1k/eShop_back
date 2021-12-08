@@ -1,20 +1,20 @@
+from django.core.cache import cache
 from rest_framework import viewsets, views
 from rest_framework.response import Response
 
 from .serializers import *
 from ..AuthAPI.views import CsrfExemptSessionAuthentication
-from ..utils.utils import get_cart_and_products_in_cart, StandardResultsSetPagination
+from ..utils.utils import get_cart_and_products_in_cart, StandardResultsSetPagination, get_or_create_customer, \
+    get_max_age
 
 
 class CustomerViewSet(views.APIView):
     authentication_classes = (CsrfExemptSessionAuthentication,)
 
     def get(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return Response(CustomerSerializer(Customer.objects.get(user=request.user)).data)
-
-        print(request.session['cart_id'])
-        return Response(CustomerSerializer(Customer.objects.get(id=request.session['cart_id'])).data)
+        # if request.user.is_authenticated:
+        #     return Response(CustomerSerializer(Customer.objects.get(user=request.user)).data)
+        return Response(CustomerSerializer(Customer.objects.get(id=request.COOKIES.get('customer_id'))).data)
 
     def patch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -23,7 +23,7 @@ class CustomerViewSet(views.APIView):
             if serializer.is_valid():
                 serializer.save()
             return Response(serializer.data)
-        customer = Customer.objects.get(id=request.session['cart_id'])
+        customer = Customer.objects.get(id=cache.get('cart_id'))
         serializer = CustomerSerializer(customer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -51,7 +51,7 @@ class ShoesViewSet(viewsets.ModelViewSet):
             product['in_cart'] = False
             if product['id'] in products_in_cart:
                 product['in_cart'] = True
-                product['qty'] = cart.products.filter(product=product['id'], cart=cart.id).first().qty
+                product['qty'] = cart.products.filter(product=product['id']).first().qty
         return serializer_data
 
     def get_queryset(self):
@@ -74,11 +74,15 @@ class ShoesViewSet(viewsets.ModelViewSet):
         return queryset
 
     def list(self, request, *args, **kwargs):
+        cart = products_in_cart = []
+        response = Response()
         queryset = self.filter_queryset(self.get_queryset())
-        cart, products_in_cart = get_cart_and_products_in_cart(request)
+        if self.request.COOKIES.get('customer_id') is not None:
+            customer = get_or_create_customer(self.request)
+            cart, products_in_cart = get_cart_and_products_in_cart(request, customer.id)
+            response.set_cookie('customer_id', customer.id, get_max_age(self.request))
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(queryset, many=True)
-
         serializer_data = serializer.data
         if page is not None:
             serializer = ShoesListRetrieveSerializer(page, many=True)
@@ -87,11 +91,12 @@ class ShoesViewSet(viewsets.ModelViewSet):
             # for product in serializer.data:
             #     product['in_cart'] = True if product['id'] in products_in_cart else False
             return self.get_paginated_response(serializer_data)
-        if cart:
+        if cart is not None:
             # for product in serializer_data:
             #     product['in_cart'] = False
             #     if product['id'] in products_in_cart:
             #         product['in_cart'] = True
             #         product['qty'] = cart.products.filter(product=product['id'], cart=cart.id).first().qty
             serializer_data = self.check_cart_and_set_qty(serializer_data, products_in_cart, cart)
-        return Response(serializer_data)
+        response.data = serializer_data
+        return response

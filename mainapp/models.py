@@ -149,6 +149,7 @@ class ImageGallery(models.Model):
 class CartProduct(models.Model):
     """Продукт для корзины"""
     cart = models.ForeignKey('Cart', verbose_name='Корзина', on_delete=models.CASCADE, related_name='related_products')
+    customer = models.ForeignKey('Customer', verbose_name='Покупатель', null=True, on_delete=models.CASCADE)
     qty = models.PositiveIntegerField(default=1, verbose_name='Количество товара')
     product = models.ForeignKey(Shoes, verbose_name='Товар', on_delete=models.CASCADE)
     final_price = models.DecimalField(max_digits=9, decimal_places=2, null=True, verbose_name='Общая цена')
@@ -169,7 +170,7 @@ class Customer(models.Model):
     user = models.OneToOneField(User, null=True, verbose_name='Пользователь', on_delete=models.CASCADE)
     first_name = models.CharField('Имя', null=True, max_length=255, blank=True)
     last_name = models.CharField('Фамилия', null=True, max_length=255, blank=True)
-    # phone = models.CharField(max_length=20, verbose_name='Номер телефона', null=True, blank=True)
+    phone = models.CharField(max_length=20, verbose_name='Номер телефона', null=True, blank=True)
     email = models.CharField(max_length=20, verbose_name='Почта', null=True, blank=True)
     address = models.CharField(max_length=255, verbose_name='Адрес', null=True, blank=True)
     orders = models.ManyToManyField('Order', verbose_name='Заказы покупателя', related_name='related_order', blank=True)
@@ -190,7 +191,7 @@ class Customer(models.Model):
 
 class Cart(models.Model):
     """Корзина"""
-    owner = models.ForeignKey(Customer, null=True, verbose_name='Владелец', on_delete=models.CASCADE)
+    owner = models.ForeignKey(Customer, null=False, verbose_name='Владелец', on_delete=models.CASCADE)
     products = models.ManyToManyField(CartProduct, null=True, blank=True, related_name='related_cart')
     total_products = models.PositiveIntegerField(default=0)
     final_price = models.DecimalField(max_digits=9, default=0, decimal_places=2, verbose_name='Общая цена')

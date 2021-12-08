@@ -47,6 +47,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'eShop.urls'
@@ -97,6 +98,10 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+SESSION_SAVE_EVERY_REQUEST = True
+
+SESSION_COOKIE_AGE = 31536000
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
