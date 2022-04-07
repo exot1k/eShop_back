@@ -81,6 +81,7 @@ class ShoesViewSet(viewsets.ModelViewSet):
             customer = get_or_create_customer(self.request)
             cart, products_in_cart = get_cart_and_products_in_cart(request, customer.id)
             response.set_cookie('customer_id', customer.id, get_max_age(self.request))
+
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(queryset, many=True)
         serializer_data = serializer.data

@@ -180,8 +180,8 @@ class Customer(models.Model):
     def __str__(self):
         if self.is_anonymous_user:
             return str(self.id)
-        if not (self.first_name and self.last_name):
-            return self.user.phone
+        # if not (self.first_name and self.last_name):
+        #     return self.user.phone
         return "Покупатель: {} {}".format(self.first_name, self.last_name)
 
     class Meta:

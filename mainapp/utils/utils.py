@@ -5,14 +5,10 @@ from mainapp.models import Cart, Customer
 
 @staticmethod
 def get_or_create_customer(request):
-    # if cache.get('customer_id') is None:
     if request.COOKIES.get('customer_id') is None:
         customer = Customer.objects.create(is_anonymous_user=True)
-        # cache.set('customer_id', customer.id, None)
-
         return customer
 
-    # customer = Customer.objects.get(id=cache.get('customer_id'))
     customer, create = Customer.objects.get_or_create(id=request.COOKIES.get('customer_id'))
 
     if request.user.is_authenticated:
@@ -25,7 +21,6 @@ def get_or_create_customer(request):
 @staticmethod
 def get_max_age(request):
     max_age = request.session.get_expiry_age()
-    print(max_age)
     return max_age
 
 
